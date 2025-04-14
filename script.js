@@ -1,3 +1,6 @@
+const table = document.querySelector("table");
+const tableBody = document.querySelector("tbody");
+
 function Library() {
   this.books = [];
 }
@@ -10,34 +13,96 @@ function Book(title, author, pages, read) {
   this.read = read;
 }
 
+function deleteRow() {
+  const cell = document.createElement("td");
+  const deleteRow = document.createElement("img");
+  deleteRow.classList = "delete-row";
+  deleteRow.src = "delete.svg";
+  cell.appendChild(deleteRow);
+  deleteRow.addEventListener("click", (e) => {
+    console.log(e.target.parentNode.parentNode.rowIndex);
+    table.deleteRow(e.target.parentNode.parentNode.rowIndex);
+  });
+  return cell;
+}
+
 const library = new Library();
 
+Library.prototype.addToTable = function (book) {
+  console.log("in here");
+  const row = document.createElement("tr");
+  for (const key of Object.keys(book1)) {
+    const cell = document.createElement("td");
+    cell.innerText =
+      key === "read" ? (book[key] ? "Read" : "Not Read") : book[key];
+    row.appendChild(cell);
+  }
+  //give user option to delete row
+  row.appendChild(deleteRow());
+  tableBody.append(row);
+};
+
 Library.prototype.addBooktoLibrary = function () {
-  console.log(library);
-  console.log(this);
   library.books.push(this);
+  library.addToTable(this);
+};
+
+Book.prototype.createBook = function (title, author, pages, read) {
+  const book = new Book(title, author, pages, read);
 };
 
 Object.setPrototypeOf(Book.prototype, Library.prototype);
 
-const book1 = new Book("Harry Potter", "JK Rowling", "300", true);
-book1.addBooktoLibrary();
+const book1 = new Book("Fahrenheit 451", "Ray Bradbury", "249", true);
+const book2 = new Book("1984", "Geroge Orwell", "328", true);
+const book3 = new Book("To Kill a Mockingbird", "Harper Lee", "336", false);
+const book4 = new Book("Lord of the FLies", "William Golding", "224", false);
+const bookList = [book1, book2, book3, book4];
+for (const book of bookList) book.addBooktoLibrary();
 
 //create table for books
 
-const table = document.querySelector("table");
-console.log(table);
+const button = document.querySelector(".add-book");
+const dialogElement = document.querySelector("#new-book");
+const clearTable = document.querySelector(".clear-table");
+const form = document.querySelector("form");
+const cancelNewBook = document.querySelector(".cancel-new-book");
 
-const tableBody = document.querySelector("tbody");
+button.addEventListener("click", () => {
+  dialogElement.showModal();
+});
 
-for (book of library.books) {
-  console.log(book);
-  const row = document.createElement("tr");
-  for (const key of Object.keys(book1)) {
-    console.log(key);
-    const cell = document.createElement("td");
-    cell.innerText = book[key];
-    row.appendChild(cell);
+cancelNewBook.addEventListener("click", () => {
+  dialogElement.close();
+  form.reset();
+});
+
+document.addEventListener("click", (e) => {
+  if (e.target === dialogElement) {
+    dialogElement.close();
   }
-  tableBody.append(row);
-}
+});
+
+clearTable.addEventListener("click", () => {
+  if (confirm("Are you sure you want to clear your library?")) {
+    table.removeChild(tableBody);
+    const newTableBody = document.createElement("tbody");
+    table.appendChild(newTableBody);
+  }
+});
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const userValues = e.target;
+  console.log(e.target.title.value);
+  const book = new Book(
+    userValues.title.value,
+    userValues.author.value,
+    userValues.pages.value,
+    userValues.read.checked
+  );
+  book.addBooktoLibrary();
+  console.log(book);
+  dialogElement.close();
+  form.reset();
+});
