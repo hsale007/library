@@ -21,7 +21,14 @@
           <form action="#" method="post">
             <h3>Book to Add</h3>
             <div class="title">
-              <label for="book-title">Title</label>
+              <label for="book-title"
+                >Title
+                <span
+                  aria-label="required"
+                  style="font-family: var(--content-font)"
+                  >*</span
+                ></label
+              >
               <input type="text" id="book-title" name="title" required />
             </div>
             <div class="author">
