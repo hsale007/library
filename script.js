@@ -13,32 +13,64 @@ function Book(title, author, pages, read) {
   this.read = read;
 }
 
-function deleteRow() {
+function addUserOptions(isRead) {
   const cell = document.createElement("td");
+  cell.appendChild(deleteRow());
+  cell.appendChild(toggleReadStatus(isRead));
+  return cell;
+}
+
+function findId(e) {
+  return e.target.parentNode.parentNode.parentNode.querySelectorAll("td")[0]
+    .innerText;
+}
+
+function deleteRow() {
   const deleteRow = document.createElement("img");
   deleteRow.classList = "delete-row";
   deleteRow.src = "delete.svg";
-  cell.appendChild(deleteRow);
   deleteRow.addEventListener("click", (e) => {
-    console.log(e.target.parentNode.parentNode.rowIndex);
+    console.log(findId(e));
+    console.log(
+      library.books.indexOf(library.books.find((book) => book.id === findId(e)))
+    );
+    library.books.splice(
+      library.books.findIndex((book) => book.id === findId(e)),
+      1
+    );
     table.deleteRow(e.target.parentNode.parentNode.rowIndex);
   });
-  return cell;
+  return deleteRow;
+}
+
+function toggleReadStatus(isRead) {
+  const check = document.createElement("span");
+  const img = document.createElement("img");
+  img.src = isRead ? "checked.svg" : "unchecked.svg";
+  check.appendChild(img);
+  img.addEventListener("click", (e) => {
+    console.log(findId(e));
+    console.log(library.books.findIndex((book) => book.id === findId(e)));
+    e.target.src =
+      e.target.src.split("/").pop() === "checked.svg"
+        ? "unchecked.svg"
+        : "checked.svg";
+  });
+  return check;
 }
 
 const library = new Library();
 
 Library.prototype.addToTable = function (book) {
-  console.log("in here");
   const row = document.createElement("tr");
   for (const key of Object.keys(book1)) {
     const cell = document.createElement("td");
     cell.innerText =
       key === "read" ? (book[key] ? "Read" : "Not Read") : book[key];
     row.appendChild(cell);
+    if (key === "read") row.appendChild(addUserOptions(book["read"]));
   }
-  //give user option to delete row
-  row.appendChild(deleteRow());
+  //add user options to each row in table
   tableBody.append(row);
 };
 
