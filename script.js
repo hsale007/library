@@ -21,8 +21,7 @@ function addUserOptions(isRead) {
 }
 
 function findId(e) {
-  return e.target.parentNode.parentNode.parentNode.querySelectorAll("td")[0]
-    .innerText;
+  return e.target.parentNode.parentNode.querySelectorAll("td")[0].innerText;
 }
 
 function deleteRow() {
@@ -30,10 +29,10 @@ function deleteRow() {
   deleteRow.classList = "delete-row";
   deleteRow.src = "delete.svg";
   deleteRow.addEventListener("click", (e) => {
-    console.log(findId(e));
-    console.log(
-      library.books.indexOf(library.books.find((book) => book.id === findId(e)))
-    );
+    // console.log(findId(e));
+    // console.log(
+    //   library.books.indexOf(library.books.find((book) => book.id === findId(e)))
+    // );
     library.books.splice(
       library.books.findIndex((book) => book.id === findId(e)),
       1
@@ -49,8 +48,16 @@ function toggleReadStatus(isRead) {
   img.src = isRead ? "checked.svg" : "unchecked.svg";
   check.appendChild(img);
   img.addEventListener("click", (e) => {
-    console.log(findId(e));
-    console.log(library.books.findIndex((book) => book.id === findId(e)));
+    const id =
+      e.target.parentNode.parentNode.parentNode.querySelectorAll("td")[0]
+        .innerText;
+    const book =
+      library.books[library.books.findIndex((book) => book.id === id)];
+    book.read = !book.read;
+    //change table read status
+    e.target.parentNode.parentNode.parentNode.querySelectorAll(
+      "td"
+    )[4].innerText = book.read === true ? "Read" : "Not Read";
     e.target.src =
       e.target.src.split("/").pop() === "checked.svg"
         ? "unchecked.svg"
