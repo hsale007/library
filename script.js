@@ -1,27 +1,43 @@
-const table = document.querySelector("table");
 const tableBody = document.querySelector("tbody");
 
 function Library() {
+  if (!new.target) {
+    throw Error("You must use 'new' operator to call Library constructor");
+  }
   this.books = [];
 }
 
+Library.prototype.addBookToLibrary = function (book) {
+  this.books.push(book);
+  displayBook(book);
+};
+
 function Book(title, author, pages, read) {
+  if (!new.target) {
+    throw Error("You must use 'new' operator to call Book constructor");
+  }
   this.id = crypto.randomUUID();
   this.title = title;
   this.author = author;
   this.pages = pages;
   this.read = read;
-}
 
-function addUserOptions(isRead) {
-  const cell = document.createElement("td");
-  cell.appendChild(deleteRow());
-  cell.appendChild(toggleReadStatus(isRead));
-  return cell;
+  this.info = function () {
+    readValue = this.read ? "has been read" : "not read yet";
+    return `${this.title} by ${this.author}, ${this.pages} pages, ${readValue}`;
+  };
 }
+const library = new Library();
+const book1 = new Book("Fahrenheit 451", "Ray Bradbury", "249", true);
+const book2 = new Book("1984", "Geroge Orwell", "328", true);
+const book3 = new Book("To Kill a Mockingbird", "Harper Lee", "336", false);
+const book4 = new Book("Lord of the FLies", "William Golding", "224", false);
+const bookList = [book1, book2, book3, book4];
+for (const book of bookList) library.addBookToLibrary(book);
 
-function findId(e) {
-  return e.target.parentNode.parentNode.querySelectorAll("td")[0].innerText;
+function findBookFromTable(row) {
+  const id = row.querySelector(".id").innerText;
+  return library.books.findIndex((book) => book.id === id);
 }
 
 function deleteRow() {
@@ -29,119 +45,95 @@ function deleteRow() {
   deleteRow.classList = "delete-row";
   deleteRow.src = "delete.svg";
   deleteRow.addEventListener("click", (e) => {
-    // console.log(findId(e));
-    // console.log(
-    //   library.books.indexOf(library.books.find((book) => book.id === findId(e)))
-    // );
-    library.books.splice(
-      library.books.findIndex((book) => book.id === findId(e)),
-      1
-    );
-    table.deleteRow(e.target.parentNode.parentNode.rowIndex);
+    const row = e.target.parentNode.parentNode;
+    const bookIndex = findBookFromTable(row);
+    library.books.splice(bookIndex, 1);
+    tableBody.removeChild(row);
+    // console.log(library);
   });
   return deleteRow;
 }
 
-function toggleReadStatus(isRead) {
-  const check = document.createElement("span");
-  const img = document.createElement("img");
-  img.src = isRead ? "checked.svg" : "unchecked.svg";
-  check.appendChild(img);
-  img.addEventListener("click", (e) => {
-    const id =
-      e.target.parentNode.parentNode.parentNode.querySelectorAll("td")[0]
-        .innerText;
-    const book =
-      library.books[library.books.findIndex((book) => book.id === id)];
+function toggleRead(isRead) {
+  const readStatus = document.createElement("img");
+  readStatus.src = isRead ? "checked.svg" : "unchecked.svg";
+  readStatus.addEventListener("click", (e) => {
+    const row = e.target.parentNode.parentNode;
+    const bookIndex = findBookFromTable(row);
+    const book = library.books[bookIndex];
     book.read = !book.read;
-    //change table read status
-    e.target.parentNode.parentNode.parentNode.querySelectorAll(
-      "td"
-    )[4].innerText = book.read === true ? "Read" : "Not Read";
-    e.target.src =
-      e.target.src.split("/").pop() === "checked.svg"
-        ? "unchecked.svg"
-        : "checked.svg";
+    readStatus.src = book.read ? "checked.svg" : "unchecked.svg";
+    row.querySelector(".read").innerText = book.read ? "Read" : "Not Read";
+    console.log(book);
   });
-  return check;
+  return readStatus;
 }
 
-const library = new Library();
+function userOptions(isRead) {
+  const cell = document.createElement("td");
+  cell.appendChild(deleteRow());
+  cell.appendChild(toggleRead(isRead));
+  return cell;
+}
 
-Library.prototype.addToTable = function (book) {
+function displayBook(book) {
   const row = document.createElement("tr");
-  for (const key of Object.keys(book1)) {
-    const cell = document.createElement("td");
-    cell.innerText =
-      key === "read" ? (book[key] ? "Read" : "Not Read") : book[key];
-    row.appendChild(cell);
-    if (key === "read") row.appendChild(addUserOptions(book["read"]));
+  for (const key in book) {
+    if (typeof book[key] !== "function") {
+      const cell = document.createElement("td");
+      cell.classList = key;
+      cell.innerText =
+        key !== "read" ? book[key] : book[key] === true ? "Read" : "Not Read";
+      row.appendChild(cell);
+    }
   }
-  //add user options to each row in table
-  tableBody.append(row);
-};
+  row.append(userOptions(book.read));
+  tableBody.appendChild(row);
+}
 
-Library.prototype.addBooktoLibrary = function () {
-  library.books.push(this);
-  library.addToTable(this);
-};
-
-Book.prototype.createBook = function (title, author, pages, read) {
-  const book = new Book(title, author, pages, read);
-};
-
-Object.setPrototypeOf(Book.prototype, Library.prototype);
-
-const book1 = new Book("Fahrenheit 451", "Ray Bradbury", "249", true);
-const book2 = new Book("1984", "Geroge Orwell", "328", true);
-const book3 = new Book("To Kill a Mockingbird", "Harper Lee", "336", false);
-const book4 = new Book("Lord of the FLies", "William Golding", "224", false);
-const bookList = [book1, book2, book3, book4];
-for (const book of bookList) book.addBooktoLibrary();
-
-//create table for books
-
-const button = document.querySelector(".add-book");
-const dialogElement = document.querySelector("#new-book");
-const clearTable = document.querySelector(".clear-table");
 const form = document.querySelector("form");
-const cancelNewBook = document.querySelector(".cancel-new-book");
+const addBookBtn = document.querySelector(".add-book");
+const dialogElement = document.querySelector("#new-book");
+const closeDialog = document.querySelector(".cancel-new-book");
+const clearTable = document.querySelector(".clear-table");
 
-button.addEventListener("click", () => {
+addBookBtn.addEventListener("click", (e) => {
   dialogElement.showModal();
+  document.addEventListener("click", (e) => {
+    console.log(e.target);
+    if (e.target === dialogElement) {
+      dialogElement.close();
+    }
+  });
 });
 
-cancelNewBook.addEventListener("click", () => {
+closeDialog.addEventListener("click", () => {
   dialogElement.close();
   form.reset();
-});
-
-document.addEventListener("click", (e) => {
-  if (e.target === dialogElement) {
-    dialogElement.close();
-  }
-});
-
-clearTable.addEventListener("click", () => {
-  if (confirm("Are you sure you want to clear your library?")) {
-    table.removeChild(tableBody);
-    const newTableBody = document.createElement("tbody");
-    table.appendChild(newTableBody);
-  }
 });
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-  const userValues = e.target;
-  console.log(e.target.title.value);
-  const book = new Book(
-    userValues.title.value,
-    userValues.author.value,
-    userValues.pages.value,
-    userValues.read.checked
-  );
-  book.addBooktoLibrary();
-  console.log(book);
-  dialogElement.close();
+  bookInputs = [];
+  for (element of form.elements) {
+    if (element.tagName === "INPUT") {
+      if (element.type === "checkbox") {
+        bookInputs.push(element.checked);
+        continue;
+      }
+      bookInputs.push(element.value);
+    }
+  }
+  const userBook = new Book(...bookInputs);
+  library.addBookToLibrary(userBook);
   form.reset();
+});
+
+clearTable.addEventListener("click", () => {
+  if (confirm("Are you sure you want to clear your library?")) {
+    console.log("Clearing Table of length: " + library.books.length);
+    tableBody.innerText = "";
+    library.books = [];
+    console.log(library.books);
+  }
 });
